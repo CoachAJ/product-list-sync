@@ -12,7 +12,6 @@ import {
   Search,
   ArrowLeft,
   Link,
-  Download,
   Copy,
   CheckCircle,
 } from 'lucide-react';
@@ -32,7 +31,7 @@ export function ReviewPhase() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [copied, setCopied] = useState<'article' | 'url' | null>(null);
-  const [generatedUrl, setGeneratedUrl] = useState('');
+  const [, setGeneratedUrl] = useState('');
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);

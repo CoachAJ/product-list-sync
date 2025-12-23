@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAppStore } from './store/useAppStore';
 import { Header } from './components/Header';
 import { InputPhase } from './components/InputPhase';
@@ -8,10 +8,8 @@ import { initProductMatcher } from './utils/productMatcher';
 
 function App() {
   const currentStep = useAppStore((state) => state.currentStep);
-  const [productsLoaded, setProductsLoaded] = useState(false);
-
   useEffect(() => {
-    initProductMatcher().then(() => setProductsLoaded(true));
+    initProductMatcher();
   }, []);
 
   return (

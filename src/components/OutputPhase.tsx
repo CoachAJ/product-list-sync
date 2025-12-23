@@ -48,11 +48,11 @@ export function OutputPhase() {
     if (!element) return;
 
     const opt = {
-      margin: [0.5, 0.5, 0.5, 0.5],
+      margin: [0.5, 0.5, 0.5, 0.5] as [number, number, number, number],
       filename: `Health-Report-${session.clientName.replace(/\s+/g, '-')}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      jsPDF: { unit: 'in' as const, format: 'letter' as const, orientation: 'portrait' as const },
     };
 
     html2pdf().set(opt).from(element).save();

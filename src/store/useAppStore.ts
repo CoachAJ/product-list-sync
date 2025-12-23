@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AppState, CoachSession, Product } from '../types';
+import type { AppState, CoachSession } from '../types';
 
 const initialSession: CoachSession = {
   coachName: '',

@@ -67,32 +67,39 @@ export function findProductsInText(text: string): Product[] {
   });
 
   // Specific keyword matching - only match known product keywords
+  // NOTE: Order matters - prefer single items over 4-packs, prefer 2.0/2.5/3.0 over Original
   const productKeywords: Record<string, string[]> = {
-    // === HEALTHY BODY PAKS ===
-    'healthy body start pak': ['10301', '10252Q', '10252'],
-    'healthy start pak': ['10301', '10252Q', '10252'],
-    'start pak': ['10301', '10252Q', '10252'],
-    'start pack': ['10301', '10252Q', '10252'],
+    // === HEALTHY BODY PAKS (hierarchy: 3.0 > 2.5 > 2.0 > Original) ===
+    // Start Pak contains: BTT + Beyond Osteo-FX + Ultimate EFA Plus
+    'healthy body start pak': ['10301', '10252Q', '10252', '10245'],
+    'healthy start pak': ['10301', '10252Q', '10252', '10245'],
+    'start pak': ['10301', '10252Q', '10252', '10245'],
+    'start pack': ['10301', '10252Q', '10252', '10245'],
     'mighty 90': ['10301', '10252Q', '10252'],
     '90 essential': ['10301', '10252Q', '10252'],
     
+    // Brain & Heart Pak contains: BTT + Beyond Osteo-FX + Ultimate EFA Plus + Ultimate EFA + Ultimate Selenium
     'healthy body brain and heart': ['10258', '10258Q', '10249'],
     'brain and heart pak': ['10258', '10258Q', '10249'],
     'brain and heart pack': ['10258', '10258Q', '10249'],
     
+    // Bone & Joint Pak contains: BTT + Beyond Osteo-FX + Ultimate EFA Plus + Ultimate Gluco-Gel 240 + Ultimate CM Cream
     'healthy body bone and joint': ['10256', '10256Q', '10247'],
     'bone and joint pak': ['10256', '10256Q', '10247'],
     'bone and joint pack': ['10256', '10256Q', '10247'],
     'pig pack': ['10256', '10256Q', '10247'],
     
+    // Blood Sugar Pak contains: BTT + Beyond Osteo-FX + Ultimate EFA Plus + Sweet Eze
     'healthy body blood sugar': ['10254', '10254Q', '10246'],
     'blood sugar pak': ['10254', '10254Q', '10246'],
     'blood sugar pack': ['10254', '10254Q', '10246'],
     
+    // Digestion Pak
     'healthy body digestion': ['10257', '10257Q', '10248'],
     'digestion pak': ['10257', '10257Q', '10248'],
     'digestion pack': ['10257', '10257Q', '10248'],
     
+    // Athletic Pak
     'healthy body athletic': ['10259', '10259Q', '10250'],
     'athletic pak': ['10259', '10259Q', '10250'],
     'athletic pack': ['10259', '10259Q', '10250'],
@@ -112,14 +119,14 @@ export function findProductsInText(text: string): Product[] {
     'plant derived minerals': ['13203'],
     'plant minerals': ['13203'],
     
-    // === EFAs (Essential Fatty Acids) ===
+    // === EFAs (Essential Fatty Acids) - prefer single over 4-pack ===
     'ultimate efa plus': ['20989'],
     'efa plus': ['20989'],
-    'ultimate efa': ['21832', '20641'],
-    'ultimate efas': ['21832', '20641'],
-    'efas': ['21832', '20641'],
-    'essential fatty acids': ['21832', '20641'],
-    'omega 3': ['21832', '20641'],
+    'ultimate efa': ['20641', '21832'],  // Single 60ct first, then 180ct
+    'ultimate efas': ['20641', '21832'],
+    'efas': ['20641', '21832'],
+    'essential fatty acids': ['20641', '21832'],
+    'omega 3': ['20641', '21832'],
     'multi-efa': ['USYG102165'],
     
     // === DIGESTIVE & GUT HEALTH ===
@@ -157,10 +164,10 @@ export function findProductsInText(text: string): Product[] {
     'chromium and vanadium': ['21014'],
     
     // === BONE & JOINT / CONNECTIVE TISSUE ===
-    'gluco-gel': ['21251', '21252', '13216'],
-    'gluco gel': ['21251', '21252', '13216'],
-    'glucogel': ['21251', '21252', '13216'],
-    'glucosamine': ['21251', '21252'],
+    'gluco-gel': ['21252', '21251', '13216'],  // 240ct first, then 120ct
+    'gluco gel': ['21252', '21251', '13216'],
+    'glucogel': ['21252', '21251', '13216'],
+    'glucosamine': ['21252', '21251'],
     
     'msm ultra': ['USFL000123'],
     'msm': ['USFL000123'],
@@ -168,6 +175,15 @@ export function findProductsInText(text: string): Product[] {
     
     'collagen peptides': ['USYG300005'],
     'collagen': ['USYG300005'],
+    
+    // CM Cream (included in Bone & Joint Pak)
+    'cm cream': ['150203'],
+    'ultimate cm cream': ['150203'],
+    
+    // Osteo-Mag (Magnesium)
+    'osteo-mag': ['21210'],
+    'osteomag': ['21210'],
+    'magnesium': ['21210'],
     
     // === CARDIOVASCULAR & CIRCULATION ===
     'ultimate daily classic': ['USYG100084'],
@@ -190,13 +206,22 @@ export function findProductsInText(text: string): Product[] {
     'cell shield': ['21203'],
     'resveratrol': ['21203'],
     
-    'ultimate selenium': ['20671'],
-    'selenium': ['20671'],
+    'ultimate selenium': ['20971', '20671'],  // 90ct single first
+    'selenium': ['20971', '20671'],
     
     'imortalium': ['USYG100100'],
     
+    // === VITAMINS ===
+    'vitamin d3': ['USYG100099', 'USYG100001'],
+    'vitamin d': ['USYG100099', 'USYG100001'],
+    'd3': ['USYG100099'],
+    
+    // === TOPICAL / PAIN RELIEF ===
+    'trauma oil': ['67043'],
+    'trauma': ['67043'],
+    
     // === SPECIALTY PRODUCTS ===
-    'colloidal silver': ['USYG100401', 'USYG0033'],
+    'colloidal silver': ['USYG100401'],
     'silver': ['USYG100401'],
     
     'oceans gold': ['67507'],

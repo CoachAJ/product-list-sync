@@ -212,6 +212,10 @@ export function findProductsInText(text: string): Product[] {
     'imortalium': ['USYG100100'],
     
     // === VITAMINS ===
+    'vitamin c': ['20984', 'USYG100076'],  // C-Fx first, BTT also has high Vitamin C
+    'c-fx': ['20984'],
+    'cfx': ['20984'],
+    
     'vitamin d3': ['USYG100099', 'USYG100001'],
     'vitamin d': ['USYG100099', 'USYG100001'],
     'd3': ['USYG100099'],

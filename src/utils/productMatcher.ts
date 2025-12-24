@@ -68,16 +68,54 @@ export function findProductsInText(text: string): Product[] {
 
   // Specific keyword matching - only match known product keywords
   const productKeywords: Record<string, string[]> = {
-    'tangy tangerine': ['USYG100075', 'USYG100076', 'USYG100077'],
-    'beyond tangy tangerine': ['USYG100075', 'USYG100076', 'USYG100077'],
+    // Core products
+    'tangy tangerine': ['USYG100076', 'USYG100075', 'USYG100077'],
+    'beyond tangy tangerine': ['USYG100076', 'USYG100075', 'USYG100077'],
     'btt 2.0': ['USYG100076'],
+    'btt': ['USYG100076'],
     'osteo fx': ['USYG100050', 'USYG100051'],
     'osteo-fx': ['USYG100050', 'USYG100051'],
     'beyond osteo': ['USYG100050', 'USYG100051'],
     'plant derived minerals': ['USYG100040'],
-    'efa plus': ['USYG100020'],
-    'ultimate efa': ['USYG100020'],
-    'ultimate enzymes': ['USYG100010'],
+    
+    // EFAs
+    'efa plus': ['20989'],
+    'ultimate efa': ['21832', '20641', '20989'],
+    'efas': ['21832', '20641', '20989'],
+    'essential fatty acids': ['21832', '20641', '20989'],
+    'multi-efa': ['USYG102165'],
+    
+    // Digestive/Gut Health
+    'ultimate enzymes': ['21211'],
+    'fucoid': ['3005'],
+    'fucoidz': ['3005'],
+    'i26': ['USLL005030', 'USLL006014', 'USLL006011'],
+    'hyperimmune egg': ['USLL005030', 'USLL006014'],
+    'nightly essence': ['65002'],
+    'nightly essense': ['65002'],
+    
+    // Blood Sugar
+    'blood sugar pak': ['10254', '10254Q', '10246'],
+    'healthy body blood sugar': ['10254', '10254Q', '10246'],
+    'sweet eze': ['21014'],
+    'sweeteze': ['21014'],
+    
+    // Bone & Joint
+    'bone and joint pak': ['10256', '10256Q', '10247'],
+    'healthy body bone and joint': ['10256', '10256Q', '10247'],
+    'brain and heart pak': ['10258', '10258Q', '10249'],
+    'healthy body brain and heart': ['10258', '10258Q', '10249'],
+    'gluco-gel': ['21251', '21252', '13216'],
+    'gluco gel': ['21251', '21252', '13216'],
+    'glucogel': ['21251', '21252', '13216'],
+    'msm': ['USFL000123'],
+    'msm ultra': ['USFL000123'],
+    
+    // Collagen & Connective Tissue
+    'collagen peptides': ['USYG300005'],
+    'collagen': ['USYG300005'],
+    
+    // Other supplements
     'projoba omega': ['USPJ'],
     'root beer belly': ['USYG100080'],
     'slender fx': ['USSF'],
@@ -85,13 +123,12 @@ export function findProductsInText(text: string): Product[] {
     'synaptiv': ['USYG100090'],
     'imortalium': ['USYG100100'],
     'cell shield': ['USYG100110'],
-    'gluco gel': ['USYG100120'],
-    'sweet eze': ['USYG100130'],
-    'healthy body start pak': ['USYG'],
-    'healthy start pak': ['USYG'],
+    'healthy body start pak': ['10251', '10252'],
+    'healthy start pak': ['10251', '10252'],
     'd-stress': ['USYG'],
-    'killer biotic': ['USYG'],
-    'ultimate selenium': ['USYG100030'],
+    'killer biotic': ['USYG3002'],
+    'ultimate selenium': ['USYG100030', '20671'],
+    'selenium': ['20671'],
     'ultimate daily': ['USYG'],
     'rebound fx': ['USYG100062', 'USYG100063'],
   };

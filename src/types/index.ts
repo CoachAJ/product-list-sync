@@ -41,4 +41,5 @@ export interface AppState {
   setIsProcessing: (isProcessing: boolean) => void;
   setCurrentStep: (step: 'input' | 'review' | 'output') => void;
   reset: () => void;
+  clearAll: () => void;
 }

@@ -94,6 +94,19 @@ export const useAppStore = create<AppState>()(
             clientName: '',
           },
         })),
+
+      clearAll: () =>
+        set({
+          sources: [
+            { id: 1, content: '' },
+            { id: 2, content: '' },
+          ],
+          synthesizedArticle: '',
+          detectedProducts: [],
+          isProcessing: false,
+          currentStep: 'input',
+          session: initialSession,
+        }),
     }),
     {
       name: 'content-synthesizer-storage',

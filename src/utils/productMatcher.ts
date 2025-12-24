@@ -109,8 +109,8 @@ export function findProductsInText(text: string): Product[] {
     'osteo-fx': ['USYG100050', 'USYG100051'],
     'osteo fx': ['USYG100050', 'USYG100051'],
     
-    'plant derived minerals': ['USYG100040', '13203'],
-    'plant minerals': ['USYG100040', '13203'],
+    'plant derived minerals': ['13203'],
+    'plant minerals': ['13203'],
     
     // === EFAs (Essential Fatty Acids) ===
     'ultimate efa plus': ['20989'],

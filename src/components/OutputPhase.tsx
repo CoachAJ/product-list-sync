@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { generateCheckoutUrl, calculateTotal } from '../utils/urlGenerator';
 import {
@@ -25,6 +25,13 @@ export function OutputPhase() {
   const [copiedArticle, setCopiedArticle] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
+  // Redirect to input if required data is missing (e.g., after page refresh)
+  useEffect(() => {
+    if (!synthesizedArticle || !session.clientName) {
+      setCurrentStep('input');
+    }
+  }, [synthesizedArticle, session.clientName, setCurrentStep]);
+
   const checkoutUrl = generateCheckoutUrl(session.userId, detectedProducts);
   const selectedProducts = detectedProducts.filter((p) => p.selected);
   const total = calculateTotal(detectedProducts);
@@ -41,21 +48,142 @@ export function OutputPhase() {
     setTimeout(() => setCopiedArticle(false), 2000);
   };
 
-  const handleDownloadPdf = async () => {
-    const html2pdf = (await import('html2pdf.js')).default;
-    
+  const handleDownloadPdf = () => {
     const element = reportRef.current;
     if (!element) return;
 
-    const opt = {
-      margin: [0.5, 0.5, 0.5, 0.5] as [number, number, number, number],
-      filename: `Health-Report-${session.clientName.replace(/\s+/g, '-')}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in' as const, format: 'letter' as const, orientation: 'portrait' as const },
-    };
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to download the PDF');
+      return;
+    }
 
-    html2pdf().set(opt).from(element).save();
+    const clientName = session.clientName || 'Report';
+    const coachName = session.coachName || '';
+    const date = new Date().toLocaleDateString();
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Health Report - ${clientName}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 40px; 
+            color: #333;
+            line-height: 1.6;
+          }
+          .header { 
+            border-bottom: 3px solid #0068B3; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+          }
+          .header h1 { color: #0068B3; font-size: 28px; }
+          .header .client { color: #666; font-size: 18px; margin-top: 5px; }
+          .header .meta { text-align: right; color: #888; font-size: 14px; }
+          .content h1 { color: #0068B3; font-size: 22px; margin: 25px 0 15px; }
+          .content h2 { color: #58595B; font-size: 18px; margin: 20px 0 10px; }
+          .content h3 { color: #58595B; font-size: 16px; margin: 15px 0 10px; }
+          .content p { margin-bottom: 12px; }
+          .content li { margin-left: 25px; margin-bottom: 8px; }
+          .products { 
+            margin-top: 40px; 
+            padding-top: 25px; 
+            border-top: 3px solid #F58A34; 
+          }
+          .products h2 { color: #F58A34; margin-bottom: 20px; }
+          .product-item { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #eee; 
+          }
+          .product-name { font-weight: 600; }
+          .product-sku { color: #888; font-size: 12px; }
+          .product-price { color: #0068B3; font-weight: 600; }
+          .product-qty { color: #888; font-size: 12px; }
+          .total { 
+            display: flex; 
+            justify-content: space-between; 
+            padding-top: 15px; 
+            font-size: 18px; 
+            font-weight: bold; 
+          }
+          .total span:last-child { color: #0068B3; }
+          .footer { 
+            margin-top: 40px; 
+            padding-top: 20px; 
+            border-top: 1px solid #ddd; 
+            text-align: center; 
+            color: #999; 
+            font-size: 12px; 
+          }
+          @media print {
+            body { padding: 20px; }
+            @page { margin: 0.5in; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1>Health Recommendations</h1>
+            <div class="client">for ${clientName}</div>
+          </div>
+          <div class="meta">
+            <div>Prepared by ${coachName}</div>
+            <div>${date}</div>
+          </div>
+        </div>
+        <div class="content">
+          ${synthesizedArticle.split('\n').map(line => {
+            if (line.startsWith('# ')) return `<h1>${line.replace('# ', '')}</h1>`;
+            if (line.startsWith('## ')) return `<h2>${line.replace('## ', '')}</h2>`;
+            if (line.startsWith('### ')) return `<h3>${line.replace('### ', '')}</h3>`;
+            if (line.startsWith('- ')) return `<li>${line.replace('- ', '')}</li>`;
+            if (line.trim()) return `<p>${line}</p>`;
+            return '';
+          }).join('')}
+        </div>
+        ${selectedProducts.length > 0 ? `
+          <div class="products">
+            <h2>Recommended Products</h2>
+            ${selectedProducts.map(p => `
+              <div class="product-item">
+                <div>
+                  <div class="product-name">${p.name}</div>
+                  <div class="product-sku">SKU: ${p.sku}</div>
+                </div>
+                <div style="text-align: right;">
+                  <div class="product-price">$${p.price.toFixed(2)}</div>
+                  <div class="product-qty">Qty: ${p.quantity || 1}</div>
+                </div>
+              </div>
+            `).join('')}
+            <div class="total">
+              <span>Total:</span>
+              <span>$${total.toFixed(2)}</span>
+            </div>
+          </div>
+        ` : ''}
+        <div class="footer">
+          This report was prepared by ${coachName} using the Daily with Doc & Becca Content Synthesizer
+        </div>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    
+    // Wait for content to load then trigger print
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   const handleNewReport = () => {
@@ -160,7 +288,7 @@ export function OutputPhase() {
             </button>
             <button
               onClick={handleDownloadPdf}
-              className="px-3 py-1.5 text-sm bg-[#0068B3] text-white rounded-lg font-medium hover:bg-[#005a9e] transition flex items-center gap-1"
+              className="px-3 py-1.5 text-sm bg-[#0068B3] text-white rounded-lg font-medium transition flex items-center gap-1 hover:bg-[#005a9e]"
             >
               <Download className="w-4 h-4" />
               Save as PDF

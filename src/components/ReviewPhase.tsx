@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { generateCheckoutUrl, calculateTotal } from '../utils/urlGenerator';
 import { searchProducts } from '../utils/productMatcher';
@@ -32,6 +32,13 @@ export function ReviewPhase() {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [copied, setCopied] = useState<'article' | 'url' | null>(null);
   const [, setGeneratedUrl] = useState('');
+
+  // Redirect to input if required data is missing (e.g., after page refresh)
+  useEffect(() => {
+    if (!synthesizedArticle || !session.clientName) {
+      setCurrentStep('input');
+    }
+  }, [synthesizedArticle, session.clientName, setCurrentStep]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);

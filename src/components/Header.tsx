@@ -8,6 +8,8 @@ export function Header() {
     if (window.confirm('Clear all data and start fresh? This will reset everything.')) {
       localStorage.removeItem('content-synthesizer-storage');
       clearAll();
+      // Force a page reload to ensure clean state
+      window.location.reload();
     }
   };
 

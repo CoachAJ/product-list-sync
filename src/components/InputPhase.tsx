@@ -20,15 +20,21 @@ export function InputPhase() {
   } = useAppStore();
 
   const [apiKey, setApiKey] = useState(() => 
-    localStorage.getItem('openrouter_api_key') || ''
+    localStorage.getItem('ai_api_key') || ''
+  );
+  const [selectedProvider, setSelectedProvider] = useState(() =>
+    localStorage.getItem('selected_provider') || 'google'
   );
   const [selectedModel, setSelectedModel] = useState(() =>
-    localStorage.getItem('selected_model') || 'google/gemini-2.0-flash-exp:free'
+    localStorage.getItem('selected_model') || 'gemini-2.0-flash-exp'
   );
   const [showApiKey, setShowApiKey] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const hasEnvKey = !!import.meta.env.VITE_OPENROUTER_API_KEY;
+  const currentProvider = LLM_PROVIDERS.find(p => p.id === selectedProvider) || LLM_PROVIDERS[0];
+  const hasEnvKey = selectedProvider === 'google' 
+    ? !!import.meta.env.VITE_GOOGLE_API_KEY 
+    : !!import.meta.env.VITE_OPENROUTER_API_KEY;
 
   const canProcess =
     session.coachName.trim() &&
@@ -50,8 +56,9 @@ export function InputPhase() {
     let article: string;
 
     if (apiKey.trim()) {
-      localStorage.setItem('openrouter_api_key', apiKey.trim());
+      localStorage.setItem('ai_api_key', apiKey.trim());
     }
+    localStorage.setItem('selected_provider', selectedProvider);
     localStorage.setItem('selected_model', selectedModel);
 
     const result = await synthesizeContent(
@@ -61,7 +68,8 @@ export function InputPhase() {
         clientName: session.clientName,
       },
       apiKey.trim(),
-      selectedModel
+      selectedModel,
+      selectedProvider
     );
 
     if (result.error) {
@@ -145,41 +153,69 @@ export function InputPhase() {
               {' '}AI Settings {hasEnvKey && <span className="text-green-600 text-xs">(API Key Configured ✓)</span>}
             </summary>
             <div className="mt-3 space-y-4">
-              {/* Model Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <Cpu className="w-4 h-4 inline mr-1" />
-                  AI Model
-                </label>
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3CAADF] focus:border-transparent transition text-sm"
-                >
-                  {LLM_PROVIDERS[0].models.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Models marked "(Free)" have no usage cost on OpenRouter.
-                </p>
+              {/* Provider Selection */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Cpu className="w-4 h-4 inline mr-1" />
+                    AI Provider
+                  </label>
+                  <select
+                    value={selectedProvider}
+                    onChange={(e) => {
+                      setSelectedProvider(e.target.value);
+                      const newProvider = LLM_PROVIDERS.find(p => p.id === e.target.value);
+                      if (newProvider) {
+                        setSelectedModel(newProvider.models[0].id);
+                      }
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3CAADF] focus:border-transparent transition text-sm"
+                  >
+                    {LLM_PROVIDERS.map((provider) => (
+                      <option key={provider.id} value={provider.id}>
+                        {provider.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Model Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    AI Model
+                  </label>
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3CAADF] focus:border-transparent transition text-sm"
+                  >
+                    {currentProvider.models.map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
+              <p className="text-xs text-gray-500">
+                {selectedProvider === 'google' 
+                  ? 'Google AI offers free Gemini models. Get a key at aistudio.google.com'
+                  : 'OpenRouter provides access to multiple AI providers. Free models available!'}
+              </p>
 
               {/* API Key */}
               {!hasEnvKey && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <Key className="w-4 h-4 inline mr-1" />
-                    OpenRouter API Key
+                    {selectedProvider === 'google' ? 'Google AI' : 'OpenRouter'} API Key
                   </label>
                   <div className="flex gap-2">
                     <input
                       type={showApiKey ? 'text' : 'password'}
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="sk-or-..."
+                      placeholder={selectedProvider === 'google' ? 'AIza...' : 'sk-or-...'}
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3CAADF] focus:border-transparent transition text-sm"
                     />
                     <button
@@ -191,16 +227,31 @@ export function InputPhase() {
                     </button>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Get an API key at{' '}
-                    <a
-                      href="https://openrouter.ai/keys"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#3CAADF] hover:underline"
-                    >
-                      openrouter.ai/keys
-                    </a>
-                    . Free models available!
+                    {selectedProvider === 'google' ? (
+                      <>
+                        Get a free API key at{' '}
+                        <a
+                          href="https://aistudio.google.com/app/apikey"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#3CAADF] hover:underline"
+                        >
+                          aistudio.google.com
+                        </a>
+                      </>
+                    ) : (
+                      <>
+                        Get an API key at{' '}
+                        <a
+                          href="https://openrouter.ai/keys"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#3CAADF] hover:underline"
+                        >
+                          openrouter.ai/keys
+                        </a>
+                      </>
+                    )}
                   </p>
                 </div>
               )}

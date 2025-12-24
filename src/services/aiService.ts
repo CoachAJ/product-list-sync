@@ -17,6 +17,15 @@ export interface LLMProvider {
 
 export const LLM_PROVIDERS: LLMProvider[] = [
   {
+    id: 'google',
+    name: 'Google AI (Direct)',
+    models: [
+      { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Free)' },
+      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Free)' },
+      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+    ],
+  },
+  {
     id: 'openrouter',
     name: 'OpenRouter',
     models: [
@@ -33,22 +42,27 @@ export const LLM_PROVIDERS: LLMProvider[] = [
 ];
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const GOOGLE_AI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 export async function synthesizeContent(
   request: SynthesisRequest,
   apiKey: string,
-  model: string = 'google/gemini-2.0-flash-exp:free'
+  model: string = 'gemini-2.0-flash-exp',
+  provider: string = 'google'
 ): Promise<SynthesisResponse> {
   const { sources, coachName, clientName } = request;
 
   // Check for environment variable API key first
-  const envApiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+  const envApiKey = provider === 'google' 
+    ? import.meta.env.VITE_GOOGLE_API_KEY 
+    : import.meta.env.VITE_OPENROUTER_API_KEY;
   const finalApiKey = apiKey || envApiKey;
 
   if (!finalApiKey) {
+    const keyName = provider === 'google' ? 'Google AI' : 'OpenRouter';
     return {
       article: '',
-      error: 'No API key provided. Please enter an OpenRouter API key or set VITE_OPENROUTER_API_KEY.',
+      error: `No API key provided. Please enter a ${keyName} API key.`,
     };
   }
 
@@ -80,40 +94,85 @@ Create a professional, personalized health article that synthesizes this researc
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 90000);
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${finalApiKey}`,
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'DWD Content Synthesizer',
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
-      signal: controller.signal,
-    });
+    let article: string;
 
-    clearTimeout(timeoutId);
+    if (provider === 'google') {
+      // Google AI API (Gemini)
+      const googleUrl = `${GOOGLE_AI_API_URL}/${model}:generateContent?key=${finalApiKey}`;
+      
+      const response = await fetch(googleUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: `${systemPrompt}\n\n${userPrompt}` }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 4000,
+          },
+        }),
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error?.message || `API request failed: ${response.status}`
-      );
-    }
+      clearTimeout(timeoutId);
 
-    const data = await response.json();
-    const article = data.choices?.[0]?.message?.content;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error?.message || `Google AI request failed: ${response.status}`
+        );
+      }
 
-    if (!article) {
-      throw new Error('No content generated');
+      const data = await response.json();
+      article = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!article) {
+        throw new Error('No content generated from Google AI');
+      }
+    } else {
+      // OpenRouter API
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${finalApiKey}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'DWD Content Synthesizer',
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 4000,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error?.message || `API request failed: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+      article = data.choices?.[0]?.message?.content;
+
+      if (!article) {
+        throw new Error('No content generated');
+      }
     }
 
     return { article };
@@ -124,7 +183,7 @@ Create a professional, personalized health article that synthesizes this researc
     if (error instanceof Error && error.name === 'AbortError') {
       return {
         article: '',
-        error: 'Request timed out after 90 seconds. Try a faster model like GPT-4o Mini or Gemini Flash.',
+        error: 'Request timed out after 90 seconds. Try a faster model like Gemini Flash.',
       };
     }
     

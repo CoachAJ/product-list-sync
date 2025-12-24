@@ -26,7 +26,7 @@ export function InputPhase() {
     localStorage.getItem('selected_provider') || 'google'
   );
   const [selectedModel, setSelectedModel] = useState(() =>
-    localStorage.getItem('selected_model') || 'gemini-2.0-flash-exp'
+    localStorage.getItem('selected_model') || 'gemini-2.5-flash'
   );
   const [showApiKey, setShowApiKey] = useState(false);
   const [error, setError] = useState<string | null>(null);

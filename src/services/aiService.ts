@@ -20,6 +20,9 @@ export const LLM_PROVIDERS: LLMProvider[] = [
     id: 'google',
     name: 'Google AI (Direct)',
     models: [
+      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Free) - Recommended' },
+      { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite (Free, Fast)' },
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (Free, Best Quality)' },
       { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Free)' },
       { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Free)' },
       { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
@@ -47,7 +50,7 @@ const GOOGLE_AI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/mode
 export async function synthesizeContent(
   request: SynthesisRequest,
   apiKey: string,
-  model: string = 'gemini-2.0-flash-exp',
+  model: string = 'gemini-2.5-flash',
   provider: string = 'google'
 ): Promise<SynthesisResponse> {
   const { sources, coachName, clientName } = request;

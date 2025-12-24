@@ -76,6 +76,10 @@ ${sources.map((source, i) => `--- SOURCE ${i + 1} ---\n${source}\n`).join('\n')}
 Create a professional, personalized health article that synthesizes this research while maintaining the tone and style of the original sources.`;
 
   try {
+    // Create abort controller with 90 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
@@ -93,7 +97,10 @@ Create a professional, personalized health article that synthesizes this researc
         temperature: 0.7,
         max_tokens: 4000,
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -112,6 +119,15 @@ Create a professional, personalized health article that synthesizes this researc
     return { article };
   } catch (error) {
     console.error('AI synthesis error:', error);
+    
+    // Handle abort/timeout specifically
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        article: '',
+        error: 'Request timed out after 90 seconds. Try a faster model like GPT-4o Mini or Gemini Flash.',
+      };
+    }
+    
     return {
       article: '',
       error: error instanceof Error ? error.message : 'Unknown error occurred',

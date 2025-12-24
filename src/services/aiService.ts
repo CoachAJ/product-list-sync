@@ -66,28 +66,50 @@ export async function synthesizeContent(
     };
   }
 
-  const systemPrompt = `You are a professional health content synthesizer for health coaches. Your task is to:
+  const systemPrompt = `You are a professional health content synthesizer for Youngevity health coaches. Your task is to create comprehensive, detailed health articles.
 
-1. Analyze the linguistic style and tone of the provided research sources
-2. Synthesize the information into a single, cohesive, professional article
-3. Mirror the tone and style of the source materials in your output
+IMPORTANT INSTRUCTIONS:
+1. Write a COMPLETE, DETAILED article - do not truncate or summarize prematurely
+2. Analyze the linguistic style and tone of the provided research sources
+3. Synthesize ALL information into a cohesive, professional article
 4. Focus on explaining the "why" behind health recommendations
-5. Identify and naturally mention relevant health products when the research supports them
+5. When products are mentioned in the sources, reference them by their EXACT product names
+6. Include specific dosage recommendations when mentioned in sources
+7. Write at least 800-1200 words for a thorough article
 
-Format the output as follows:
-- Start with a professional header: "Health Recommendations for ${clientName} | Prepared by ${coachName}"
-- Include a brief personalized introduction addressing the client by name
-- Organize the content with clear sections and headers
-- Use professional but warm language
-- End with a summary of key recommendations
+FORMAT:
+# Health Recommendations for ${clientName}
+## Prepared by ${coachName}
 
-Important: Do NOT invent product names. Only reference products if they are clearly mentioned or directly relevant to the research content.`;
+[Personalized introduction addressing ${clientName} by name]
 
-  const userPrompt = `Please synthesize the following ${sources.length} research sources into a cohesive health article for my client ${clientName}:
+## [Topic Section 1]
+[Detailed content with explanations]
+
+## [Topic Section 2]
+[Detailed content with explanations]
+
+## Recommended Products
+[List specific products mentioned in the research with brief explanations of why each is recommended]
+
+## Summary & Next Steps
+[Key takeaways and action items for ${clientName}]
+
+CRITICAL: Write the FULL article. Do not stop early or summarize. Include ALL relevant information from the sources.`;
+
+  const userPrompt = `Please synthesize the following ${sources.length} research sources into a COMPLETE, DETAILED health article for my client ${clientName}.
+
+IMPORTANT: Write a thorough, comprehensive article of at least 800 words. Do not truncate or stop early.
 
 ${sources.map((source, i) => `--- SOURCE ${i + 1} ---\n${source}\n`).join('\n')}
 
-Create a professional, personalized health article that synthesizes this research while maintaining the tone and style of the original sources.`;
+Create a professional, personalized health article that:
+1. Covers ALL topics from the sources in detail
+2. Explains the science and reasoning behind recommendations
+3. Lists specific product recommendations with their exact names
+4. Provides actionable next steps for the client
+
+Write the COMPLETE article now:`;
 
   try {
     // Create abort controller with 90 second timeout
@@ -115,7 +137,7 @@ Create a professional, personalized health article that synthesizes this researc
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 4000,
+            maxOutputTokens: 8000,
           },
         }),
         signal: controller.signal,
@@ -153,7 +175,7 @@ Create a professional, personalized health article that synthesizes this researc
             { role: 'user', content: userPrompt },
           ],
           temperature: 0.7,
-          max_tokens: 4000,
+          max_tokens: 8000,
         }),
         signal: controller.signal,
       });
